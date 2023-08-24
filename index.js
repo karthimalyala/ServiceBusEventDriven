@@ -1,34 +1,33 @@
-require("dotenv").config();
-const { QueueClient, QueueServiceClient } = require("@azure/storage-queue");
-
-const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-const queueName = process.env.AZURE_STORAGE_QUEUE_NAME;
+const { ServiceBusClient } = require("@azure/service-bus");
 
 async function main() {
-    const queueServiceClient = QueueServiceClient.fromConnectionString(connectionString);
-    const queueClient = queueServiceClient.getQueueClient(queueName);
-    
-    // 1. Dequeue one message from the queue
-    const response = await queueClient.receiveMessages({
-        numberOfMessages: 1,
-        visibilityTimeout: 60, // set this to longer than the expected processing time (in seconds)
-    });
+    const connectionString = "Endpoint=sb://kmalyalaservicebus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=3eeYY+uufZIDuKLwbqaKNO90CFjGY0mZp+ASbCXnRxQ=";
+    const queueName = "myqueue";
 
-    if (response.receivedMessageItems.length === 0) {
-        console.log("No message received. Exiting...");
-        return;
+    const serviceBusClient = new ServiceBusClient(connectionString);
+    const receiver = serviceBusClient.createReceiver(queueName);
+
+    try {
+        console.log("Receiving messages...");
+
+        receiver.subscribe({
+            processMessage: async (message) => {
+                console.log(`Received message: ${message.body}`);
+                // Your event-driven processing logic goes here
+            },
+            processError: async (error) => {
+                console.error("Error occurred:", error);
+            },
+        });
+
+        // Keep the program running
+        await new Promise((resolve) => setTimeout(resolve, 60000)); // Keep receiving messages for 1 minute
+    } finally {
+        await receiver.close();
+        await serviceBusClient.close();
     }
-
-    const message = response.receivedMessageItems[0];
-    console.log(`Processing message: ${message.messageText}`);
-
-    // 2. Process the message here
-
-    // 3. Delete the message from the queue
-    await queueClient.deleteMessage(message.messageId, message.popReceipt);
-    console.log("Message processed");
-
-    // 4. Exit
 }
 
-main();
+main().catch((err) => {
+    console.error("Error:", err);
+});
