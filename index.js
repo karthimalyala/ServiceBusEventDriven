@@ -1,8 +1,11 @@
 const { ServiceBusClient } = require("@azure/service-bus");
 
 async function main() {
-    const connectionString = "Endpoint=sb://kmalyalaservicebus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=3eeYY+uufZIDuKLwbqaKNO90CFjGY0mZp+ASbCXnRxQ=";
-    const queueName = "myqueue";
+    //const connectionString = "Endpoint=sb://kmalyalaservicebus.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=3eeYY+uufZIDuKLwbqaKNO90CFjGY0mZp+ASbCXnRxQ=";
+    //const queueName = "myqueue";
+
+    const connectionString = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
+    const queueName = process.env.AZURE_SERVICE_BUS_QUEUE_NAME;
 
     const serviceBusClient = new ServiceBusClient(connectionString);
     const receiver = serviceBusClient.createReceiver(queueName);
